@@ -9,6 +9,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>pdf-import</module>
+        <module>toernooizoeker-core</module>
     </modules>
     <packaging>pom</packaging>
     <build>

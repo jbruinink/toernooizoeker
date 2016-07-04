@@ -4,50 +4,39 @@ import nl.toernooizoeker.pdfimport.operator.*;
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 
-public class PDFTableProcessor {
+public class TableCellIterator implements Iterator<TableCell>{
 
     private final HashMap<String, OperatorProcessor> operators;
     private PDFStreamParser parser;
-    private final Iterator<PDPage> pageIterator;
     private boolean record;
-    private StringBuilder builder;
-    private COSRectangle rectangle;
-    private COSRectangle clippingRectangle;
+    private StringBuilder markedContent;
+    private Rectangle rectangle;
+    private Rectangle clippingRectangle;
+    private List<String> cellText;
+    private TableCell next;
 
-    public PDFTableProcessor(File pdfFile) throws IOException {
+    public TableCellIterator(PDFStreamParser parser) throws IOException {
+        this.parser = parser;
+        markedContent = new StringBuilder();
+        cellText = new ArrayList<>();
         operators = new HashMap<>();
-        builder = new StringBuilder();
         operators.put("BDC", new BeginMarkedContentSequenceWithProperties(this));
         operators.put("EMC", new EndMarkedContentSequence(this));
         operators.put("re", new AppendRectangleToPath(this));
         operators.put("TJ", new ShowTextAdjusted(this));
         operators.put("W*", new ClipEvenOddRule(this));
-
-        pageIterator = PDDocument.load(pdfFile).getPages().iterator();
-        if(!pageIterator.hasNext()) {
-            throw new PdfReaderException("There are no pages in this PDF document");
-        }
-        parser = new PDFStreamParser(pageIterator.next());
-        initColumns();
+        processNext();
     }
 
-    public void initColumns() throws IOException {
-        processOperators();
-    }
-
-    public void processOperators() throws IOException {
+    private void processNext() {
         List<COSBase> operands = new ArrayList<>();
-        for(Object token = parser.parseNextToken(); token != null; token = parser.parseNextToken()) {
+        Object token = nextToken();
+        while(token != null && next == null) {
             if (token instanceof COSObject)
             {
                 operands.add(((COSObject) token).getObject());
@@ -61,45 +50,69 @@ public class PDFTableProcessor {
             {
                 operands.add((COSBase) token);
             }
+            token = nextToken();
+        }
+    }
+
+    private Object nextToken() {
+        try {
+            return parser.parseNextToken();
+        } catch (IOException e) {
+            return null;
         }
     }
 
     private void processOperator(Operator operator, List<COSBase> operands) {
         OperatorProcessor processor = operators.get(operator.getName());
         if(processor != null) {
-            processor.process(operator, operands);
-        } else {
-            //System.out.printf("Unsupported: %s%n", operator.getName());
+            processor.process(operands);
         }
     }
 
-    public void beginMarkedContent(COSName tag, COSDictionary properties) {
+    public void beginMarkedContent(COSName tag) {
         if(tag.getName().equals("P")) {
             record = true;
+        } else {
+            record = false;
         }
     }
 
     public void endMarkedContentSequence() {
-        String recorded = builder.toString().trim();
-        if(recorded.length() > 0) {
-            System.out.printf(" ClipRect: %d, %d, %d, %d: ", clippingRectangle.getX().intValue(), clippingRectangle.getY().intValue(),
-                    clippingRectangle.getWidth().intValue(), clippingRectangle.getHeight().intValue());
-            System.out.println(recorded);
-            builder.setLength(0);
+        String recorded = markedContent.toString().trim();
+        if (recorded.length() > 0) {
+            cellText.add(recorded);
         }
+        markedContent.setLength(0);
     }
 
     public void showText(String text) {
         if(record) {
-            builder.append(text);
+            markedContent.append(text);
         }
     }
 
-    public void appendRectangleToPath(COSRectangle rectangle) {
+    public void appendRectangleToPath(Rectangle rectangle) {
         this.rectangle = rectangle;
     }
 
     public void clipEvenOddRule() {
+        if(!Objects.equals(clippingRectangle, rectangle) && cellText.size() > 0) {
+            next = TableCell.of(clippingRectangle, cellText);
+            cellText.clear();
+        }
         this.clippingRectangle = rectangle;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return next != null;
+    }
+
+    @Override
+    public TableCell next() {
+        TableCell result = next;
+        next = null;
+        processNext();
+        return result;
     }
 }

@@ -1,7 +1,6 @@
 package nl.toernooizoeker.pdfimport.operator;
 
-import nl.toernooizoeker.pdfimport.PDFTableProcessor;
-import org.apache.pdfbox.contentstream.operator.Operator;
+import nl.toernooizoeker.pdfimport.TableCellIterator;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSString;
@@ -9,12 +8,12 @@ import org.apache.pdfbox.cos.COSString;
 import java.util.List;
 
 public class ShowTextAdjusted extends OperatorProcessor {
-    public ShowTextAdjusted(PDFTableProcessor processor) {
+    public ShowTextAdjusted(TableCellIterator processor) {
         super(processor);
     }
 
     @Override
-    public void process(Operator operator, List<COSBase> operands) {
+    public void process(List<COSBase> operands) {
         StringBuilder builder = new StringBuilder();
         COSArray array = (COSArray) operands.get(0);
         for(COSBase operand: array) {

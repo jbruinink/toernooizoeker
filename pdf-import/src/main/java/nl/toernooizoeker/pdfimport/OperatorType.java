@@ -1,0 +1,9 @@
+package nl.toernooizoeker.pdfimport;
+
+public enum OperatorType {
+    APPEND_RECTANGLE_TO_PATH,
+    BEGIN_MARKED_CONTENT_SEQUENCE_WITH_PROPERTIES,
+    CLIP_EVEN_ODD_RULE,
+    END_MARKED_CONTENT_SEQUENCE,
+    SHOW_TEXT_ADJUSTED
+}
