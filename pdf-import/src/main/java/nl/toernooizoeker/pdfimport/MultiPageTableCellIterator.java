@@ -1,45 +1,43 @@
 package nl.toernooizoeker.pdfimport;
 
+import org.apache.pdfbox.contentstream.PDContentStream;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
 import org.apache.pdfbox.pdmodel.PDPage;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 
 public class MultiPageTableCellIterator implements Iterator<TableCell> {
 
-    private final Iterator<PDPage> pageIterator;
+    private final Iterator<? extends PDContentStream> pageIterator;
     private Iterator<TableCell> iterator;
 
-    public MultiPageTableCellIterator(Iterable<PDPage> pageIterable) throws IOException {
-        this.pageIterator = pageIterable.iterator();
-        nextPage();
-    }
-
-    private void nextPage() throws IOException {
+    public MultiPageTableCellIterator(Iterator<? extends PDContentStream> pageIterator) throws IOException {
+        this.pageIterator = pageIterator;
         if(pageIterator.hasNext()) {
             iterator = new TableCellIterator(new PDFStreamParser(pageIterator.next()));
-        } else {
-            iterator = Collections.emptyIterator();
+        }
+        findNext();
+    }
+
+    private void findNext() {
+        while(!iterator.hasNext() && pageIterator.hasNext()) {
+            try {
+                iterator = new TableCellIterator(new PDFStreamParser(pageIterator.next()));
+            } catch (IOException ignored) {
+            }
         }
     }
 
     @Override
     public boolean hasNext() {
-        if(iterator.hasNext()) {
-            return true;
-        }
-        try {
-            nextPage();
-        } catch (IOException e) {
-            return false;
-        }
-        return hasNext();
+        return iterator.hasNext();
     }
 
     @Override
     public TableCell next() {
-        return null;
+        TableCell next = iterator.next();
+        findNext();
+        return next;
     }
 }

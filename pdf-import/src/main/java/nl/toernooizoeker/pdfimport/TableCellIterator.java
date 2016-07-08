@@ -20,7 +20,7 @@ public class TableCellIterator implements Iterator<TableCell>{
     private List<String> cellText;
     private TableCell next;
 
-    public TableCellIterator(PDFStreamParser parser) throws IOException {
+    public TableCellIterator(PDFStreamParser parser) {
         this.parser = parser;
         markedContent = new StringBuilder();
         cellText = new ArrayList<>();
@@ -35,8 +35,8 @@ public class TableCellIterator implements Iterator<TableCell>{
 
     private void processNext() {
         List<COSBase> operands = new ArrayList<>();
-        Object token = nextToken();
-        while(token != null && next == null) {
+
+        for(Object token = nextToken();token != null && next == null; token = nextToken()) {
             if (token instanceof COSObject)
             {
                 operands.add(((COSObject) token).getObject());
@@ -50,7 +50,6 @@ public class TableCellIterator implements Iterator<TableCell>{
             {
                 operands.add((COSBase) token);
             }
-            token = nextToken();
         }
     }
 

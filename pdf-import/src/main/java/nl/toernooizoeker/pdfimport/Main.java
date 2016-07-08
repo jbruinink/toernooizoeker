@@ -14,8 +14,7 @@ public class Main {
         PDDocument pdDocument = PDDocument.load(file);
 
         List<Column> columns = new ArrayList<>();
-        TableCellIterator tableCellIterator = new TableCellIterator(new PDFStreamParser(pdDocument.getPages().iterator().next()));
-        columns.add(0, Column.of(0, tableCellIterator.next().rectangle(), ));
+        MultiPageTableCellIterator tableCellIterator = new MultiPageTableCellIterator(pdDocument.getPages().iterator());
         while(tableCellIterator.hasNext()) {
             System.out.println(tableCellIterator.next());
         }
