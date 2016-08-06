@@ -10,6 +10,7 @@
     <modules>
         <module>pdf-import</module>
         <module>toernooizoeker-core</module>
+        <module>frontend</module>
     </modules>
     <packaging>pom</packaging>
     <build>

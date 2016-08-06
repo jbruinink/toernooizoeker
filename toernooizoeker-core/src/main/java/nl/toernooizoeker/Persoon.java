@@ -9,11 +9,7 @@ import java.time.chrono.ChronoLocalDate;
 public interface Persoon {
     String voornaam();
     String achternaam();
-    Geslacht geslacht();
     Adres adres();
     Telefoonnummer telefoonnummer();
     Emailadres emailadres();
-    LocalDate geboortedatum();
-
-    Speelsterkte speelsterkte();
 }

@@ -6,11 +6,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Value.Immutable
-public abstract class Postcode {
+public abstract class Postcode implements Wrapper<String> {
     private static final Pattern POSTCODE_PATTERN = Pattern.compile("^(\\d{4})\\s*([a-zA-Z]{2})$");
-
-    @Value.Parameter
-    abstract String value();
 
     public static Postcode of(String value) {
         Matcher matcher = POSTCODE_PATTERN.matcher(value);

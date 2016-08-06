@@ -2,7 +2,7 @@ package nl.toernooizoeker;
 
 import org.immutables.value.Value;
 
-@Value.Immutable
-public interface Speelsterkte {
-
+public interface Wrapper<T> {
+    @Value.Parameter
+    T value();
 }
